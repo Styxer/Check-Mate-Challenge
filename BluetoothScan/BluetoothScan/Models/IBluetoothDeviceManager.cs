@@ -10,5 +10,8 @@ namespace BluetoothScan.Models
     {
         // It returns all found devices -> Paired bluetooth devices or unpaired, Classic or LTE
         ObservableCollection<BTDeviceInfo> ScanDevices();
+
+        //return the scan status
+        string GetScanStatus();
     }
 }

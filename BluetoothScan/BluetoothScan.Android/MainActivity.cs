@@ -32,6 +32,8 @@ namespace BluetoothScan.Droid
 
         public static ObservableCollection<BTDeviceInfo> devices; // updating collection of devices
 
+        public static string scanStatus;
+
         // It exposes Update functions. 
         // TODO: other approaches may allow better encapsulation
         // TODO: Handle ActionDiscoveryStarted/ActionDiscoveryFinished
@@ -55,6 +57,11 @@ namespace BluetoothScan.Droid
             LoadApplication(new App(new AndroidInitializer()));
 
             Init();
+        }
+
+        internal void UpdateAdapterStatus(string status)
+        {
+            scanStatus = status;
         }
 
         // It checks appropiate premissions, gets paired BT devices, scans and enables listeners for new BT devices.
@@ -110,6 +117,7 @@ namespace BluetoothScan.Droid
 
             bluetoothAdapter.StartDiscovery();
             _bluetoothLeScanner.StartScan(_bleAdapterCallback);
+
         }
 
         // It stop both scans for both classic and BLE devices
@@ -127,8 +135,10 @@ namespace BluetoothScan.Droid
             {
                 _receiver = new BluetoothReceiver();
             }
-            
+
             RegisterReceiver(_receiver, new IntentFilter(BluetoothDevice.ActionFound));
+            RegisterReceiver(_receiver, new IntentFilter(BluetoothAdapter.ActionDiscoveryStarted));
+            RegisterReceiver(_receiver, new IntentFilter(BluetoothAdapter.ActionDiscoveryFinished));
         }
         
         // It unregisters listeners and resets the classic bluetooth receiver
@@ -161,6 +171,11 @@ namespace BluetoothScan.Droid
             return devices;
         }
 
+        public string GetScanStatus()
+        {
+            return scanStatus;
+        }
+
         // It handles the callback for parsing the BLE scan result into BT DTOs
         // And updates the device collection
         public class BLEScanCallback : ScanCallback
@@ -182,6 +197,7 @@ namespace BluetoothScan.Droid
                 base.OnScanFailed(errorCode);
                 Console.WriteLine(errorCode.ToString());
             }
+
             public void addDevice(ScanResult result)
             {
                 if(result == null || result.Device == null)

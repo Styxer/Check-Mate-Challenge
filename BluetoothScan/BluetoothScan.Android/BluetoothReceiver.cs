@@ -54,7 +54,7 @@ namespace BluetoothScan.Droid
 
                     break;
                 case BluetoothAdapter.ActionDiscoveryStarted:
-                    //MainActivity.GetInstance().UpdateAdapterStatus("Discovery Started...");
+                    MainActivity.GetInstance().UpdateAdapterStatus("Discovery Started...");
                     break;
                 case BluetoothAdapter.ActionDiscoveryFinished:
                    // MainActivity.GetInstance().UpdateAdapterStatus("Discovery Finished.");

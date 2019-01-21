@@ -14,23 +14,38 @@ namespace BluetoothScan.ViewModels
 {
     public class MainPageViewModel : ViewModelBase
     {
+        #region properties
+
         private INavigationService _navigationService { get; }
         private IPageDialogService _dialogService { get; }
+        private readonly IBluetoothDeviceManager _bluetoothDeviceManager;
 
-        public MainPageViewModel(INavigationService navigationService, IPageDialogService dialogService)
-           : base(navigationService)
+        public DelegateCommand<BTDeviceInfo> DeviceSelectedCommand { get; }
+        public DelegateCommand ScanStartCommand { get; }
+        #endregion
+
+        #region Ctor
+
+        public MainPageViewModel(INavigationService navigationService
+            , IPageDialogService dialogService,
+            IBluetoothDeviceManager bluetoothDeviceManager)
+         : base(navigationService)
         {
             _navigationService = navigationService;
             _dialogService = dialogService;
+            _bluetoothDeviceManager = bluetoothDeviceManager;
 
             Title = "Bluetooth Device Scan";
 
             DeviceSelectedCommand = new DelegateCommand<BTDeviceInfo>(DeviceSelected);
-            ScanStartCommand = new DelegateCommand(ScanStart);
+            ScanStartCommand = new DelegateCommand(ScanStart, () => !IsExecuting )
+                .ObservesProperty(() => IsExecuting)
+                .ObservesProperty(() => ScanStatus);
         }
+        #endregion
 
-        public DelegateCommand<BTDeviceInfo> DeviceSelectedCommand { get; }
-        public DelegateCommand ScanStartCommand { get; }
+
+        #region view model
 
         private ObservableCollection<BTDeviceInfo> _BluetoothDevices;
         public ObservableCollection<BTDeviceInfo> BluetoothDevices
@@ -46,24 +61,28 @@ namespace BluetoothScan.ViewModels
             set { SetProperty(ref _ScanStatus, value); }
         }
 
+        private bool _isExecuting;
+        public bool IsExecuting
+        {
+            get => _isExecuting;
+            set => SetProperty(ref _isExecuting, value);
+        }
+
+        #endregion
+
+        #region functions
         // It navigates to device details page
         private async void DeviceSelected(BTDeviceInfo device)
         {
-            //var navigationParams = new NavigationParameters
-            //{
-            //    { "bluetoothDevice", device }
-            //};
-
-
-            //await _navigationService.NavigateAsync("DevicePage", navigationParams);
             await _dialogService.DisplayAlertAsync("Alert", $"You selected {device.DeviceName}", "OK");
         }
 
         // It grabs the blutooth devices data from Android project using DI. 
         public void ScanStart()
         {
-             BluetoothDevices = Xamarin.Forms.DependencyService.Get<IBluetoothDeviceManager>().ScanDevices();
-        }
+            BluetoothDevices = _bluetoothDeviceManager.ScanDevices();
+        } 
+        #endregion
 
         public override async void OnNavigatingTo(INavigationParameters parameters)
         {
